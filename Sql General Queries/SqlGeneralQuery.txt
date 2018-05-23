@@ -1,0 +1,4 @@
+Having a general queries like:
+Table to class
+Row to column
+Parameter Creation for sp.
