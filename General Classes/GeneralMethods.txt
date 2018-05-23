@@ -1,0 +1,112 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+
+namespace Project.Web.Helper
+{
+    public static class ExtensionMethods
+    {
+        public static System.Web.Mvc.SelectList ToSelectList<TEnum>(this TEnum obj)
+                            where TEnum : struct, IComparable, IFormattable, IConvertible
+        {
+            return new SelectList(Enum.GetValues(typeof(TEnum))
+            .OfType<Enum>()
+            .Select(x => new SelectListItem
+            {
+                Text = Enum.GetName(typeof(TEnum), x),
+                Value = (Convert.ToInt32(x))
+            .ToString()
+            }), "Value", "Text");
+        }
+
+        /// <summary>
+        /// Secure FileName, Replace Invalid chars with underscore in filename
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns>string</returns>
+        public static string SecureFileName(string fileName)
+        {
+            foreach (char item in System.IO.Path.GetInvalidFileNameChars())
+            {
+                fileName = fileName.Replace(item, '_');
+            }
+            return fileName;
+        }
+		
+		//Object to json
+		public static string Serialize<T>(T obj)
+        {
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(obj.GetType());
+            MemoryStream ms = new MemoryStream();
+            serializer.WriteObject(ms, obj);
+            string retVal = Encoding.UTF8.GetString(ms.ToArray());
+            return retVal;
+        }
+
+		//Json to object
+        public static T Deserialize<T>(string json)
+        {
+            T obj = Activator.CreateInstance<T>();
+            MemoryStream ms = new MemoryStream(Encoding.Unicode.GetBytes(json));
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(obj.GetType());
+            obj = (T)serializer.ReadObject(ms);
+            ms.Close();
+            return obj;
+        }
+
+		/// <summary>
+        /// Send email method
+        /// </summary>
+        /// <param name="strEmailId"></param>
+        /// <param name="strSubject"></param>
+        /// <param name="strBody"></param>
+        /// <param name="notificationTypeId"></param>
+        /// <returns>bool</returns>
+        public static Task<bool> SendEmail(string strEmailId, string strSubject, string strBody, int notificationTypeId)
+        {
+            try
+            {
+                SystemConfigurationsEntity systemConfigurationsEntity = new SystemConfigurationsEntity();
+                systemConfigurationsEntity = SystemConfiguration;
+                if (systemConfigurationsEntity != null)
+                {
+                    MailMessage mail = new MailMessage();
+                    string[] bccid = strEmailId.Split(',');
+                    foreach (string bccEmailId in bccid)
+                    {
+                        if (bccEmailId != "")
+                        {
+                            mail.Bcc.Add(new MailAddress(bccEmailId)); //Adding Multiple BCC email Id
+                        }
+
+                    }
+                    //mail.To.Add(strEmailId);
+                    mail.From = new MailAddress(systemConfigurationsEntity.SupportEmail);
+                    mail.Subject = strSubject;
+                    mail.Body = strBody;
+                    mail.IsBodyHtml = true;
+                    SmtpClient smtp = new SmtpClient();
+                    smtp.Host = systemConfigurationsEntity.SMTPHost;
+                    smtp.Port = Convert.ToInt32(systemConfigurationsEntity.SMTPPort);
+                    smtp.UseDefaultCredentials = false;
+                    smtp.Credentials = new System.Net.NetworkCredential(systemConfigurationsEntity.SupportEmail, systemConfigurationsEntity.Password);// Enter senders User id and password
+                    smtp.EnableSsl = true;
+                    smtp.Send(mail);
+                    return Task.FromResult(true);
+                }
+                else
+                {
+                    return Task.FromResult(false);
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        
+    }
+}
