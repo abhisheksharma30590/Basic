@@ -1,0 +1,21 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Project.Entities
+{
+    [Table("TableName")]
+    public class Entity 
+    {
+        [Key]
+        public int PrimaryKey { get; set; }
+
+        [Required(ErrorMessage = "Validation")]
+        public DataType PropertyName { get; set; }
+        
+    }
+}
