@@ -1,0 +1,3 @@
+Contains the general classes like
+BaseDataAccess.cs
+ConverttoHelper.cs
